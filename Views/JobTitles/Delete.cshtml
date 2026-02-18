@@ -1,0 +1,72 @@
+﻿@model EmployeeManagementSystem.Models.Entities.JobTitle
+
+@{
+    ViewData["Title"] = "Delete Job Title";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Warning:</strong> This action cannot be undone. This will permanently delete the job title.
+                    </div>
+
+                    <h5 class="mb-3">Are you sure you want to delete this job title?</h5>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Job Title:</dt>
+                        <dd class="col-sm-8"><strong>@Model.TitleName</strong></dd>
+
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <dt class="col-sm-4">Description:</dt>
+                            <dd class="col-sm-8">@Model.Description</dd>
+                        }
+
+                        @if (Model.MinSalary.HasValue || Model.MaxSalary.HasValue)
+                        {
+                            <dt class="col-sm-4">Salary Range:</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.MinSalary.HasValue && Model.MaxSalary.HasValue)
+                                {
+                                    <span>@Model.MinSalary.Value.ToString("C") - @Model.MaxSalary.Value.ToString("C")</span>
+                                }
+                                else if (Model.MinSalary.HasValue)
+                                {
+                                    <span>From @Model.MinSalary.Value.ToString("C")</span>
+                                }
+                                else if (Model.MaxSalary.HasValue)
+                                {
+                                    <span>Up to @Model.MaxSalary.Value.ToString("C")</span>
+                                }
+                            </dd>
+                        }
+
+                        <dt class="col-sm-4">Created Date:</dt>
+                        <dd class="col-sm-8">@Model.CreatedDate.ToString("MMMM dd, yyyy")</dd>
+                    </dl>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="JobTitleId" />
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-circle"></i> Yes, Delete
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

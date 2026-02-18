@@ -1,0 +1,159 @@
+﻿@model EmployeeManagementSystem.Models.ViewModels.CreateEmployeeViewModel
+
+@{
+    ViewData["Title"] = "Add New Employee";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-person-plus-fill"></i> Add New Employee
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        @* Anti-forgery token for security *@
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        @* Personal Information Section *@
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="bi bi-person"></i> Personal Information
+                        </h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label"></label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Enter first name" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label"></label>
+                                <input asp-for="LastName" class="form-control" placeholder="Enter last name" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" placeholder="email@example.com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Phone" class="form-label"></label>
+                                <input asp-for="Phone" class="form-control" placeholder="+1234567890" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        @* Employment Details Section *@
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-briefcase"></i> Employment Details
+                        </h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="DepartmentId" class="form-label"></label>
+                                <select asp-for="DepartmentId"
+                                        asp-items="Model.Departments"
+                                        class="form-select">
+                                    <option value="">-- Select Department --</option>
+                                </select>
+                                <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="JobTitleId" class="form-label"></label>
+                                <select asp-for="JobTitleId"
+                                        asp-items="Model.JobTitles"
+                                        class="form-select">
+                                    <option value="">-- Select Job Title --</option>
+                                </select>
+                                <span asp-validation-for="JobTitleId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Salary" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="Salary" class="form-control" placeholder="0.00" />
+                                </div>
+                                <span asp-validation-for="Salary" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HireDate" class="form-label"></label>
+                                <input asp-for="HireDate" class="form-control" type="date" />
+                                <span asp-validation-for="HireDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        @* Profile Photo Section *@
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-image"></i> Profile Photo
+                        </h5>
+
+                        <div class="mb-3">
+                            <label asp-for="ProfilePhoto" class="form-label"></label>
+                            <input asp-for="ProfilePhoto"
+                                   class="form-control"
+                                   type="file"
+                                   accept="image/*"
+                                   onchange="previewImage(this)" />
+                            <span asp-validation-for="ProfilePhoto" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Accepted formats: JPG, PNG, GIF. Max size: 2MB
+                            </small>
+                        </div>
+
+                        @* Image Preview *@
+                        <div class="mb-3">
+                            <img id="imagePreview"
+                                 src="#"
+                                 alt="Preview"
+                                 class="img-thumbnail"
+                                 style="display:none; max-width: 200px;" />
+                        </div>
+
+                        @* Form Actions *@
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Create Employee
+                                </button>
+                                <a asp-action="Index" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* Enable client-side validation *@
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Image preview function
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

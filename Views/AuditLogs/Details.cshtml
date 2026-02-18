@@ -1,0 +1,105 @@
+﻿@model EmployeeManagementSystem.Models.ViewModels.AuditLogViewModel
+
+@{
+    ViewData["Title"] = "Audit Log Details";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-file-text"></i> Audit Log Details
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Log ID:</dt>
+                        <dd class="col-sm-9">@Model.Id</dd>
+
+                        <dt class="col-sm-3">Timestamp:</dt>
+                        <dd class="col-sm-9">
+                            <i class="bi bi-clock"></i> @Model.Timestamp.ToString("MMMM dd, yyyy hh:mm:ss tt")
+                            <br />
+                            <small class="text-muted">(@Model.Timestamp.ToString("yyyy-MM-dd HH:mm:ss") UTC)</small>
+                        </dd>
+
+                        <dt class="col-sm-3">User:</dt>
+                        <dd class="col-sm-9">
+                            <i class="bi bi-person"></i> @Model.UserId
+                        </dd>
+
+                        <dt class="col-sm-3">Action:</dt>
+                        <dd class="col-sm-9">
+                            <strong>@Model.Action</strong>
+                        </dd>
+
+                        <dt class="col-sm-3">Action Type:</dt>
+                        <dd class="col-sm-9">
+                            @switch (Model.ActionType)
+                            {
+                                case "Created":
+                                    <span class="badge bg-success fs-6">@Model.ActionType</span>
+                                    break;
+                                case "Updated":
+                                    <span class="badge bg-info fs-6">@Model.ActionType</span>
+                                    break;
+                                case "Deleted":
+                                    <span class="badge bg-danger fs-6">@Model.ActionType</span>
+                                    break;
+                                case "Deactivated":
+                                    <span class="badge bg-warning text-dark fs-6">@Model.ActionType</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary fs-6">@Model.ActionType</span>
+                                    break;
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Entity Type:</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-primary fs-6">@Model.EntityType</span>
+                        </dd>
+
+                        @if (Model.EmployeeId.HasValue)
+                        {
+                            <dt class="col-sm-3">Related Employee:</dt>
+                            <dd class="col-sm-9">
+                                @if (!string.IsNullOrEmpty(Model.EmployeeName))
+                                {
+                                    <a asp-controller="Employees"
+                                       asp-action="Details"
+                                       asp-route-id="@Model.EmployeeId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-person"></i> @Model.EmployeeName (ID: @Model.EmployeeId)
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>Employee ID: @Model.EmployeeId (Employee may have been deleted)</span>
+                                }
+                            </dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.Details))
+                        {
+                            <dt class="col-sm-3">Additional Details:</dt>
+                            <dd class="col-sm-9">
+                                <div class="alert alert-light">
+                                    @Model.Details
+                                </div>
+                            </dd>
+                        }
+                    </dl>
+
+                    <div class="mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Audit Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

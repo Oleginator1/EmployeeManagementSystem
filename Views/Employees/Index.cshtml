@@ -1,0 +1,555 @@
+﻿@model EmployeeManagementSystem.Models.ViewModels.EmployeeSearchViewModel
+
+@{
+    ViewData["Title"] = "Employees";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-people-fill"></i> Employees
+            </h1>
+        </div>
+        <div class="col text-end">
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add New Employee
+                </a>
+            }
+
+          
+            <a asp-action="ExportPdf"
+               asp-all-route-data="@(new Dictionary<string, string> {
+                          { "SearchTerm", Model.SearchTerm },
+                          { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                          { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                          { "StatusFilter", Model.StatusFilter },
+                          { "MinSalary", Model.MinSalary?.ToString() },
+                          { "MaxSalary", Model.MaxSalary?.ToString() },
+                          { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                          { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                          { "SortBy", Model.SortBy },
+                          { "SortOrder", Model.SortOrder }
+                      })"
+               class="btn btn-danger">
+                <i class="bi bi-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+
+    @* Success message display *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* Statistics Cards *@
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Employees</h6>
+                            <h2 class="mb-0">@Model.TotalEmployees</h2>
+                        </div>
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Active</h6>
+                            <h2 class="mb-0">@Model.ActiveEmployees</h2>
+                        </div>
+                        <i class="bi bi-person-check fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Inactive</h6>
+                            <h2 class="mb-0">@Model.InactiveEmployees</h2>
+                        </div>
+                        <i class="bi bi-person-x fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Advanced Search and Filter *@
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel"></i> Search & Filter
+                <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                    <i class="bi bi-chevron-down"></i> Advanced
+                </button>
+            </h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                @* Basic Search Row *@
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input asp-for="SearchTerm" class="form-control" placeholder="Name or email..." />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Department</label>
+                        <select asp-for="DepartmentFilter" asp-items="Model.Departments" class="form-select">
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select asp-for="StatusFilter" asp-items="Model.StatusOptions" class="form-select">
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+
+                @* Advanced Filters (Collapsible) *@
+                <div class="collapse @(Model.HasFilters ? "show" : "")" id="advancedFilters">
+                    <hr />
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Job Title</label>
+                            <select asp-for="JobTitleFilter" asp-items="Model.JobTitles" class="form-select">
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Min Salary</label>
+                            <input asp-for="MinSalary" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Max Salary</label>
+                            <input asp-for="MaxSalary" type="number" step="0.01" class="form-control" placeholder="999999.99" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hire Date From</label>
+                            <input asp-for="HireDateFrom" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hire Date To</label>
+                            <input asp-for="HireDateTo" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Results Per Page</label>
+                            <select asp-for="PageSize" class="form-select">
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Apply Filters
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Clear All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                @* Hidden fields to preserve sorting *@
+                <input type="hidden" asp-for="SortBy" />
+                <input type="hidden" asp-for="SortOrder" />
+            </form>
+        </div>
+    </div>
+
+    @* Active Filters Display *@
+    @if (Model.HasFilters)
+    {
+        <div class="alert alert-info">
+            <strong><i class="bi bi-filter-circle"></i> Active Filters:</strong>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <span class="badge bg-secondary me-1">Search: @Model.SearchTerm</span>
+            }
+            @if (Model.DepartmentFilter.HasValue)
+            {
+                var deptName = Model.Departments.FirstOrDefault(d => d.Value == Model.DepartmentFilter.ToString())?.Text;
+                <span class="badge bg-secondary me-1">Department: @deptName</span>
+            }
+            @if (Model.JobTitleFilter.HasValue)
+            {
+                var jobName = Model.JobTitles.FirstOrDefault(j => j.Value == Model.JobTitleFilter.ToString())?.Text;
+                <span class="badge bg-secondary me-1">Job Title: @jobName</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.StatusFilter))
+            {
+                <span class="badge bg-secondary me-1">Status: @Model.StatusFilter</span>
+            }
+            @if (Model.MinSalary.HasValue || Model.MaxSalary.HasValue)
+            {
+                <span class="badge bg-secondary me-1">
+                    Salary: @(Model.MinSalary?.ToString("C") ?? "Min") - @(Model.MaxSalary?.ToString("C") ?? "Max")
+                </span>
+            }
+            @if (Model.HireDateFrom.HasValue || Model.HireDateTo.HasValue)
+            {
+                <span class="badge bg-secondary me-1">
+                    Hired: @(Model.HireDateFrom?.ToString("MM/dd/yyyy") ?? "Any") - @(Model.HireDateTo?.ToString("MM/dd/yyyy") ?? "Any")
+                </span>
+            }
+            <a asp-action="Index" class="badge bg-danger text-decoration-none">
+                <i class="bi bi-x"></i> Clear All
+            </a>
+        </div>
+    }
+
+    @* Results Info *@
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            Showing @((Model.PageNumber - 1) * Model.PageSize + 1)
+            to @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalRecords))
+            of @Model.TotalRecords employees
+        </div>
+    </div>
+
+    @* Employee Table *@
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Employees != null && Model.Employees.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Photo</th>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                                                                              { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                                                                              { "StatusFilter", Model.StatusFilter },
+                                                                              { "MinSalary", Model.MinSalary?.ToString() },
+                                                                              { "MaxSalary", Model.MaxSalary?.ToString() },
+                                                                              { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "LastName" },
+                                                                              { "SortOrder", Model.SortBy == "LastName" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Full Name
+                                    @if (Model.SortBy == "LastName")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                                                                              { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                                                                              { "StatusFilter", Model.StatusFilter },
+                                                                              { "MinSalary", Model.MinSalary?.ToString() },
+                                                                              { "MaxSalary", Model.MaxSalary?.ToString() },
+                                                                              { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "Email" },
+                                                                              { "SortOrder", Model.SortBy == "Email" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Email
+                                    @if (Model.SortBy == "Email")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                                                                              { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                                                                              { "StatusFilter", Model.StatusFilter },
+                                                                              { "MinSalary", Model.MinSalary?.ToString() },
+                                                                              { "MaxSalary", Model.MaxSalary?.ToString() },
+                                                                              { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "Department" },
+                                                                              { "SortOrder", Model.SortBy == "Department" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Department
+                                    @if (Model.SortBy == "Department")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                                                                              { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                                                                              { "StatusFilter", Model.StatusFilter },
+                                                                              { "MinSalary", Model.MinSalary?.ToString() },
+                                                                              { "MaxSalary", Model.MaxSalary?.ToString() },
+                                                                              { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "JobTitle" },
+                                                                              { "SortOrder", Model.SortBy == "JobTitle" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Job Title
+                                    @if (Model.SortBy == "JobTitle")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th class="text-end">
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                                                                              { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                                                                              { "StatusFilter", Model.StatusFilter },
+                                                                              { "MinSalary", Model.MinSalary?.ToString() },
+                                                                              { "MaxSalary", Model.MaxSalary?.ToString() },
+                                                                              { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "Salary" },
+                                                                              { "SortOrder", Model.SortBy == "Salary" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Salary
+                                    @if (Model.SortBy == "Salary")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "DepartmentFilter", Model.DepartmentFilter?.ToString() },
+                                                                              { "JobTitleFilter", Model.JobTitleFilter?.ToString() },
+                                                                              { "StatusFilter", Model.StatusFilter },
+                                                                              { "MinSalary", Model.MinSalary?.ToString() },
+                                                                              { "MaxSalary", Model.MaxSalary?.ToString() },
+                                                                              { "HireDateFrom", Model.HireDateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "HireDateTo", Model.HireDateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "Status" },
+                                                                              { "SortOrder", Model.SortBy == "Status" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Status
+                                    @if (Model.SortBy == "Status")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var employee in Model.Employees)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(employee.ProfilePhotoPath))
+                                        {
+                                            <img src="@employee.ProfilePhotoPath"
+                                                 alt="@employee.FullName"
+                                                 class="rounded-circle"
+                                                 style="width: 40px; height: 40px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                                 style="width: 40px; height: 40px;">
+                                                @employee.FullName.Substring(0, 1)
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>@employee.FullName</td>
+                                    <td>@employee.Email</td>
+                                    <td>@employee.DepartmentName</td>
+                                    <td>@employee.JobTitleName</td>
+                                    <td class="text-end">@employee.Salary.ToString("C")</td>
+                                    <td>
+                                        @if (employee.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details"
+                                               asp-route-id="@employee.EmployeeId"
+                                               class="btn btn-sm btn-info"
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                                            {
+                                                <a asp-action="Edit"
+                                                   asp-route-id="@employee.EmployeeId"
+                                                   class="btn btn-sm btn-warning"
+                                                   title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="Delete"
+                                                   asp-route-id="@employee.EmployeeId"
+                                                   class="btn btn-sm btn-danger"
+                                                   title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @* Pagination *@
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Employee pagination">
+                        <ul class="pagination justify-content-center">
+                            @* Previous Button *@
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-SearchTerm="@Model.SearchTerm"
+                                   asp-route-DepartmentFilter="@Model.DepartmentFilter"
+                                   asp-route-JobTitleFilter="@Model.JobTitleFilter"
+                                   asp-route-StatusFilter="@Model.StatusFilter"
+                                   asp-route-MinSalary="@Model.MinSalary"
+                                   asp-route-MaxSalary="@Model.MaxSalary"
+                                   asp-route-HireDateFrom="@Model.HireDateFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-HireDateTo="@Model.HireDateTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-SortBy="@Model.SortBy"
+                                   asp-route-SortOrder="@Model.SortOrder"
+                                   asp-route-PageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-PageSize="@Model.PageSize">
+                                    Previous
+                                </a>
+                            </li>
+
+                            @* Page Numbers *@
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-SearchTerm="@Model.SearchTerm"
+                                       asp-route-DepartmentFilter="@Model.DepartmentFilter"
+                                       asp-route-JobTitleFilter="@Model.JobTitleFilter"
+                                       asp-route-StatusFilter="@Model.StatusFilter"
+                                       asp-route-MinSalary="@Model.MinSalary"
+                                       asp-route-MaxSalary="@Model.MaxSalary"
+                                       asp-route-HireDateFrom="@Model.HireDateFrom?.ToString("yyyy-MM-dd")"
+                                       asp-route-HireDateTo="@Model.HireDateTo?.ToString("yyyy-MM-dd")"
+                                       asp-route-SortBy="@Model.SortBy"
+                                       asp-route-SortOrder="@Model.SortOrder"
+                                       asp-route-PageNumber="@i"
+                                       asp-route-PageSize="@Model.PageSize">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @* Next Button *@
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-SearchTerm="@Model.SearchTerm"
+                                   asp-route-DepartmentFilter="@Model.DepartmentFilter"
+                                   asp-route-JobTitleFilter="@Model.JobTitleFilter"
+                                   asp-route-StatusFilter="@Model.StatusFilter"
+                                   asp-route-MinSalary="@Model.MinSalary"
+                                   asp-route-MaxSalary="@Model.MaxSalary"
+                                   asp-route-HireDateFrom="@Model.HireDateFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-HireDateTo="@Model.HireDateTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-SortBy="@Model.SortBy"
+                                   asp-route-SortOrder="@Model.SortOrder"
+                                   asp-route-PageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-PageSize="@Model.PageSize">
+                                    Next
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No employees found matching your search criteria.
+                    @if (Model.HasFilters)
+                    {
+                        <br />
+                        <a asp-action="Index" class="alert-link">Clear filters to see all employees</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss success alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert-success').fadeOut('slow');
+        }, 5000);
+
+        // Remember scroll position after page reload
+        $(document).ready(function() {
+            if (sessionStorage.scrollPos) {
+                $(window).scrollTop(sessionStorage.scrollPos);
+                sessionStorage.removeItem('scrollPos');
+            }
+        });
+
+        // Save scroll position before page unload
+        $(window).on('beforeunload', function() {
+            sessionStorage.scrollPos = $(window).scrollTop();
+        });
+    </script>
+}

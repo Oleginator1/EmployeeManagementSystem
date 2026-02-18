@@ -1,0 +1,187 @@
+﻿@model EmployeeManagementSystem.Models.Entities.JobTitle
+
+@{
+    ViewData["Title"] = "Job Title Details";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-briefcase"></i> Job Title Details
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4>@Model.TitleName</h4>
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="text-muted">@Model.Description</p>
+                            }
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group" role="group">
+                                <a asp-action="Edit"
+                                   asp-route-id="@Model.JobTitleId"
+                                   class="btn btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                @if (!Model.Employees.Any())
+                                {
+                                    <a asp-action="Delete"
+                                       asp-route-id="@Model.JobTitleId"
+                                       class="btn btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                }
+                            </div>
+                            <a asp-action="Index" class="btn btn-secondary ms-2">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-info-circle"></i> Job Title Information
+                            </h5>
+                            <dl class="row">
+                                <dt class="col-sm-3">Job Title ID:</dt>
+                                <dd class="col-sm-9">@Model.JobTitleId</dd>
+
+                                @if (Model.MinSalary.HasValue || Model.MaxSalary.HasValue)
+                                {
+                                    <dt class="col-sm-3">Salary Range:</dt>
+                                    <dd class="col-sm-9">
+                                        @if (Model.MinSalary.HasValue && Model.MaxSalary.HasValue)
+                                        {
+                                            <span>@Model.MinSalary.Value.ToString("C") - @Model.MaxSalary.Value.ToString("C")</span>
+                                        }
+                                        else if (Model.MinSalary.HasValue)
+                                        {
+                                            <span>From @Model.MinSalary.Value.ToString("C")</span>
+                                        }
+                                        else if (Model.MaxSalary.HasValue)
+                                        {
+                                            <span>Up to @Model.MaxSalary.Value.ToString("C")</span>
+                                        }
+                                    </dd>
+                                }
+
+                                <dt class="col-sm-3">Created Date:</dt>
+                                <dd class="col-sm-9">@Model.CreatedDate.ToString("MMMM dd, yyyy hh:mm tt")</dd>
+
+                                @if (Model.ModifiedDate.HasValue)
+                                {
+                                    <dt class="col-sm-3">Last Modified:</dt>
+                                    <dd class="col-sm-9">@Model.ModifiedDate.Value.ToString("MMMM dd, yyyy hh:mm tt")</dd>
+                                }
+
+                                <dt class="col-sm-3">Total Employees:</dt>
+                                <dd class="col-sm-9">
+                                    <span class="badge bg-primary fs-6">@Model.Employees.Count</span>
+                                </dd>
+
+                                <dt class="col-sm-3">Active Employees:</dt>
+                                <dd class="col-sm-9">
+                                    <span class="badge bg-success fs-6">@Model.Employees.Count(e => e.IsActive)</span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    @* Employees List *@
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-people"></i> Employees with this Job Title
+                            </h5>
+
+                            @if (Model.Employees.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Department</th>
+                                                <th>Email</th>
+                                                <th class="text-end">Salary</th>
+                                                <th>Status</th>
+                                                <th class="text-center">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var employee in Model.Employees.OrderBy(e => e.LastName))
+                                            {
+                                                <tr>
+                                                    <td>@employee.FullName</td>
+                                                    <td>@employee.Department?.Name</td>
+                                                    <td>@employee.Email</td>
+                                                    <td class="text-end">@employee.Salary.ToString("C")</td>
+                                                    <td>
+                                                        @if (employee.IsActive)
+                                                        {
+                                                            <span class="badge bg-success">Active</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">Inactive</span>
+                                                        }
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a asp-controller="Employees"
+                                                           asp-action="Details"
+                                                           asp-route-id="@employee.EmployeeId"
+                                                           class="btn btn-sm btn-info"
+                                                           title="View Employee">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                @* Salary Statistics *@
+                                @if (Model.Employees.Any())
+                                {
+                                    var avgSalary = Model.Employees.Average(e => e.Salary);
+                                    var minSalary = Model.Employees.Min(e => e.Salary);
+                                    var maxSalary = Model.Employees.Max(e => e.Salary);
+
+                                    <div class="alert alert-light mt-3">
+                                        <h6>Salary Statistics for this Job Title:</h6>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <strong>Average:</strong> @avgSalary.ToString("C")
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Minimum:</strong> @minSalary.ToString("C")
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Maximum:</strong> @maxSalary.ToString("C")
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> No employees assigned to this job title yet.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

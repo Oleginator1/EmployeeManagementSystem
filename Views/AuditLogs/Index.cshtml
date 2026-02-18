@@ -1,0 +1,465 @@
+﻿@model EmployeeManagementSystem.Models.ViewModels.AuditLogSearchViewModel
+
+@{
+    ViewData["Title"] = "Audit Logs";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-clock-history"></i> Audit Logs
+            </h1>
+        </div>
+        <div class="col text-end">
+            <a asp-action="ExportCsv"
+               asp-all-route-data="@(new Dictionary<string, string> {
+                          { "SearchTerm", Model.SearchTerm },
+                          { "UserFilter", Model.UserFilter },
+                          { "ActionTypeFilter", Model.ActionTypeFilter },
+                          { "EntityTypeFilter", Model.EntityTypeFilter },
+                          { "DateFrom", Model.DateFrom?.ToString("yyyy-MM-dd") },
+                          { "DateTo", Model.DateTo?.ToString("yyyy-MM-dd") },
+                          { "SortBy", Model.SortBy },
+                          { "SortOrder", Model.SortOrder }
+                      })"
+               class="btn btn-success">
+                <i class="bi bi-download"></i> Export CSV
+            </a>
+
+          
+            <a asp-action="ExportPdf"
+               asp-all-route-data="@(new Dictionary<string, string> {
+                          { "SearchTerm", Model.SearchTerm },
+                          { "UserFilter", Model.UserFilter },
+                          { "ActionTypeFilter", Model.ActionTypeFilter },
+                          { "EntityTypeFilter", Model.EntityTypeFilter },
+                          { "DateFrom", Model.DateFrom?.ToString("yyyy-MM-dd") },
+                          { "DateTo", Model.DateTo?.ToString("yyyy-MM-dd") },
+                          { "SortBy", Model.SortBy },
+                          { "SortOrder", Model.SortOrder }
+                      })"
+               class="btn btn-danger">
+                <i class="bi bi-file-pdf"></i> Export PDF
+            </a>
+
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#clearLogsModal">
+                <i class="bi bi-trash"></i> Clear Old Logs
+            </button>
+        </div>
+    </div>
+
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle-fill"></i> @TempData["InfoMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* Statistics Cards *@
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Actions</h6>
+                            <h2 class="mb-0">@Model.TotalActions.ToString("N0")</h2>
+                        </div>
+                        <i class="bi bi-list-check fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Today</h6>
+                            <h2 class="mb-0">@Model.ActionsToday</h2>
+                        </div>
+                        <i class="bi bi-calendar-check fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">This Week</h6>
+                            <h2 class="mb-0">@Model.ActionsThisWeek</h2>
+                        </div>
+                        <i class="bi bi-calendar-week fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Search and Filter *@
+    <div class="card mb-3">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel"></i> Search & Filter
+                <button class="btn btn-sm btn-outline-secondary float-end" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                    <i class="bi bi-chevron-down"></i> Advanced
+                </button>
+            </h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input asp-for="SearchTerm" class="form-control" placeholder="Search actions..." />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">User</label>
+                        <select asp-for="UserFilter" asp-items="Model.Users" class="form-select">
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Action Type</label>
+                        <select asp-for="ActionTypeFilter" asp-items="Model.ActionTypes" class="form-select">
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+
+                @* Advanced Filters *@
+                <div class="collapse @(Model.HasFilters ? "show" : "")" id="advancedFilters">
+                    <hr />
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Entity Type</label>
+                            <select asp-for="EntityTypeFilter" asp-items="Model.EntityTypes" class="form-select">
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date From</label>
+                            <input asp-for="DateFrom" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date To</label>
+                            <input asp-for="DateTo" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Results Per Page</label>
+                            <select asp-for="PageSize" class="form-select">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Apply Filters
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Clear All
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <input type="hidden" asp-for="SortBy" />
+                <input type="hidden" asp-for="SortOrder" />
+            </form>
+        </div>
+    </div>
+
+
+    @if (Model.HasFilters)
+    {
+        <div class="alert alert-info">
+            <strong><i class="bi bi-filter-circle"></i> Active Filters:</strong>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <span class="badge bg-secondary me-1">Search: @Model.SearchTerm</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.UserFilter))
+            {
+                <span class="badge bg-secondary me-1">User: @Model.UserFilter</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.ActionTypeFilter))
+            {
+                <span class="badge bg-secondary me-1">Action: @Model.ActionTypeFilter</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.EntityTypeFilter))
+            {
+                <span class="badge bg-secondary me-1">Entity: @Model.EntityTypeFilter</span>
+            }
+            @if (Model.DateFrom.HasValue || Model.DateTo.HasValue)
+            {
+                <span class="badge bg-secondary me-1">
+                    Date: @(Model.DateFrom?.ToString("MM/dd/yyyy") ?? "Any") - @(Model.DateTo?.ToString("MM/dd/yyyy") ?? "Any")
+                </span>
+            }
+            <a asp-action="Index" class="badge bg-danger text-decoration-none">
+                <i class="bi bi-x"></i> Clear All
+            </a>
+        </div>
+    }
+
+    @* Results Info *@
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            Showing @((Model.PageNumber - 1) * Model.PageSize + 1)
+            to @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalRecords))
+            of @Model.TotalRecords log entries
+        </div>
+    </div>
+
+    @* Audit Logs Table *@
+    <div class="card">
+        <div class="card-body">
+            @if (Model.AuditLogs != null && Model.AuditLogs.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 50px;">ID</th>
+                                <th style="width: 160px;">
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "UserFilter", Model.UserFilter },
+                                                                              { "ActionTypeFilter", Model.ActionTypeFilter },
+                                                                              { "EntityTypeFilter", Model.EntityTypeFilter },
+                                                                              { "DateFrom", Model.DateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "DateTo", Model.DateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "timestamp" },
+                                                                              { "SortOrder", Model.SortBy == "timestamp" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    Timestamp
+                                    @if (Model.SortBy == "timestamp")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th style="width: 120px;">
+                                    <a asp-action="Index"
+                                       asp-all-route-data="@(new Dictionary<string, string> {
+                                                                              { "SearchTerm", Model.SearchTerm },
+                                                                              { "UserFilter", Model.UserFilter },
+                                                                              { "ActionTypeFilter", Model.ActionTypeFilter },
+                                                                              { "EntityTypeFilter", Model.EntityTypeFilter },
+                                                                              { "DateFrom", Model.DateFrom?.ToString("yyyy-MM-dd") },
+                                                                              { "DateTo", Model.DateTo?.ToString("yyyy-MM-dd") },
+                                                                              { "SortBy", "user" },
+                                                                              { "SortOrder", Model.SortBy == "user" && Model.SortOrder == "asc" ? "desc" : "asc" },
+                                                                              { "PageSize", Model.PageSize.ToString() }
+                                                                          })"
+                                   class="text-white text-decoration-none">
+                                    User
+                                    @if (Model.SortBy == "user")
+                                        {
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>Action</th>
+                                <th style="width: 100px;">Type</th>
+                                <th style="width: 100px;">Entity</th>
+                                <th style="width: 150px;">Employee</th>
+                                <th style="width: 80px;" class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in Model.AuditLogs)
+                            {
+                                <tr>
+                                    <td>@log.Id</td>
+                                    <td>
+                                        <small>@log.Timestamp.ToString("MM/dd/yyyy HH:mm:ss")</small>
+                                    </td>
+                                    <td>
+                                        <small>@log.UserId</small>
+                                    </td>
+                                    <td>@log.Action</td>
+                                    <td>
+                                        @switch (log.ActionType)
+                                        {
+                                            case "Created":
+                                                <span class="badge bg-success">@log.ActionType</span>
+                                                break;
+                                            case "Updated":
+                                                <span class="badge bg-info">@log.ActionType</span>
+                                                break;
+                                            case "Deleted":
+                                                <span class="badge bg-danger">@log.ActionType</span>
+                                                break;
+                                            case "Deactivated":
+                                                <span class="badge bg-warning text-dark">@log.ActionType</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@log.ActionType</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">@log.EntityType</span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(log.EmployeeName))
+                                        {
+                                            <a asp-controller="Employees"
+                                               asp-action="Details"
+                                               asp-route-id="@log.EmployeeId">
+                                                @log.EmployeeName
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="Details"
+                                           asp-route-id="@log.Id"
+                                           class="btn btn-sm btn-info"
+                                           title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @* Pagination *@
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Audit log pagination">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-SearchTerm="@Model.SearchTerm"
+                                   asp-route-UserFilter="@Model.UserFilter"
+                                   asp-route-ActionTypeFilter="@Model.ActionTypeFilter"
+                                   asp-route-EntityTypeFilter="@Model.EntityTypeFilter"
+                                   asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-SortBy="@Model.SortBy"
+                                   asp-route-SortOrder="@Model.SortOrder"
+                                   asp-route-PageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-PageSize="@Model.PageSize">
+                                    Previous
+                                </a>
+                            </li>
+
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-SearchTerm="@Model.SearchTerm"
+                                       asp-route-UserFilter="@Model.UserFilter"
+                                       asp-route-ActionTypeFilter="@Model.ActionTypeFilter"
+                                       asp-route-EntityTypeFilter="@Model.EntityTypeFilter"
+                                       asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                       asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                                       asp-route-SortBy="@Model.SortBy"
+                                       asp-route-SortOrder="@Model.SortOrder"
+                                       asp-route-PageNumber="@i"
+                                       asp-route-PageSize="@Model.PageSize">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-SearchTerm="@Model.SearchTerm"
+                                   asp-route-UserFilter="@Model.UserFilter"
+                                   asp-route-ActionTypeFilter="@Model.ActionTypeFilter"
+                                   asp-route-EntityTypeFilter="@Model.EntityTypeFilter"
+                                   asp-route-DateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-DateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-SortBy="@Model.SortBy"
+                                   asp-route-SortOrder="@Model.SortOrder"
+                                   asp-route-PageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-PageSize="@Model.PageSize">
+                                    Next
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No audit log entries found.
+                    @if (Model.HasFilters)
+                    {
+                        <br />
+                        <a asp-action="Index" class="alert-link">Clear filters to see all logs</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="clearLogsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Clear Old Logs
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This will permanently delete all audit log entries older than <strong>90 days</strong>.</p>
+                <p class="text-danger"><strong>This action cannot be undone!</strong></p>
+                <p>Are you sure you want to continue?</p>
+            </div>
+            <div class="modal-footer">
+                <form asp-action="Clear" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Yes, Clear Old Logs</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

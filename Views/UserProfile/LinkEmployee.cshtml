@@ -1,0 +1,73 @@
+﻿@using EmployeeManagementSystem.Models.Entities
+@{
+    ViewData["Title"] = "Link Employee to User";
+    var userId = ViewData["UserId"] as string;
+    var userEmail = ViewData["UserEmail"] as string;
+    var employees = ViewData["Employees"] as List<Employee>;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="bi bi-link-45deg"></i> Link Employee to User
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Linking user: <strong>@userEmail</strong>
+                    </div>
+
+                    @if (employees != null && employees.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Employee Name</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var employee in employees)
+                                    {
+                                        <tr>
+                                            <td>@employee.FullName</td>
+                                            <td>@employee.Email</td>
+                                            <td>@employee.Department?.Name</td>
+                                            <td class="text-center">
+                                                <form asp-action="LinkEmployee" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="userId" value="@userId" />
+                                                    <input type="hidden" name="employeeId" value="@employee.EmployeeId" />
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-link-45deg"></i> Link
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> No employees available to link.
+                        </div>
+                    }
+
+                    <a asp-controller="Users" asp-action="Index" class="btn btn-secondary mt-3">
+                        <i class="bi bi-arrow-left"></i> Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,263 @@
+﻿@model IEnumerable<EmployeeManagementSystem.Models.ViewModels.JobTitleViewModel>
+
+@{
+    ViewData["Title"] = "Job Titles";
+    var searchTerm = ViewData["SearchTerm"] as string;
+    var sortBy = ViewData["SortBy"] as string;
+    var sortOrder = ViewData["SortOrder"] as string;
+    var nextSortOrder = ViewData["NextSortOrder"] as string;
+}
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-briefcase"></i> Job Titles
+            </h1>
+        </div>
+        <div class="col text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add New Job Title
+            </a>
+
+
+            <a asp-action="ExportPdf"
+               asp-route-searchTerm="@ViewData["SearchTerm"]"
+               asp-route-sortBy="@ViewData["SortBy"]"
+               asp-route-sortOrder="@ViewData["SortOrder"]"
+               class="btn btn-danger">
+                <i class="bi bi-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+
+   
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @* Search Bar *@
+    <div class="card mb-3">
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text"
+                               name="searchTerm"
+                               value="@searchTerm"
+                               class="form-control"
+                               placeholder="Search job titles..." />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* Statistics Cards *@
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Job Titles</h6>
+                            <h2 class="mb-0">@Model.Count()</h2>
+                        </div>
+                        <i class="bi bi-briefcase-fill fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Total Employees</h6>
+                            <h2 class="mb-0">@Model.Sum(j => j.EmployeeCount)</h2>
+                        </div>
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title">Avg Employees/Title</h6>
+                            <h2 class="mb-0">
+                                @(Model.Any() ? Math.Round(Model.Average(j => j.EmployeeCount), 1) : 0)
+                            </h2>
+                        </div>
+                        <i class="bi bi-bar-chart fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Job Titles Table *@
+    <div class="card">
+        <div class="card-body">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-sortBy="title"
+                                       asp-route-sortOrder="@(sortBy == "title" ? nextSortOrder : "asc")"
+                                       class="text-white text-decoration-none">
+                                        Job Title
+                                        @if (sortBy == "title")
+                                        {
+                                            <i class="bi bi-@(sortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th>Description</th>
+                                <th class="text-center">
+                                    <a asp-action="Index"
+                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-sortBy="employeecount"
+                                       asp-route-sortOrder="@(sortBy == "employeecount" ? nextSortOrder : "desc")"
+                                       class="text-white text-decoration-none">
+                                        Employees
+                                        @if (sortBy == "employeecount")
+                                        {
+                                            <i class="bi bi-@(sortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th class="text-center">Active</th>
+                                <th>
+                                    <a asp-action="Index"
+                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-sortBy="created"
+                                       asp-route-sortOrder="@(sortBy == "created" ? nextSortOrder : "desc")"
+                                       class="text-white text-decoration-none">
+                                        Created
+                                        @if (sortBy == "created")
+                                        {
+                                            <i class="bi bi-@(sortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                        }
+                                    </a>
+                                </th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var jobTitle in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@jobTitle.TitleName</strong>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(jobTitle.Description))
+                                        {
+                                            @(jobTitle.Description.Length > 50 ? jobTitle.Description.Substring(0, 50) + "..." : jobTitle.Description)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No description</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6">@jobTitle.EmployeeCount</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success fs-6">@jobTitle.ActiveEmployeeCount</span>
+                                    </td>
+                                    <td>
+                                        @jobTitle.CreatedDate.ToString("MMM dd, yyyy")
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details"
+                                               asp-route-id="@jobTitle.JobTitleId"
+                                               class="btn btn-sm btn-info"
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit"
+                                               asp-route-id="@jobTitle.JobTitleId"
+                                               class="btn btn-sm btn-warning"
+                                               title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            @if (jobTitle.EmployeeCount == 0)
+                                            {
+                                                <a asp-action="Delete"
+                                                   asp-route-id="@jobTitle.JobTitleId"
+                                                   class="btn btn-sm btn-danger"
+                                                   title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-secondary"
+                                                        disabled
+                                                        title="Cannot delete - has employees">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No job titles found.
+                    @if (!string.IsNullOrEmpty(searchTerm))
+                    {
+                        <br />
+                        <a asp-action="Index" class="alert-link">Clear search to see all job titles</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+       
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

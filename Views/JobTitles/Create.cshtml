@@ -1,0 +1,80 @@
+﻿@model EmployeeManagementSystem.Models.ViewModels.CreateJobTitleViewModel
+
+@{
+    ViewData["Title"] = "Create Job Title";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-briefcase"></i> Create New Job Title
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="TitleName" class="form-label"></label>
+                            <input asp-for="TitleName" class="form-control" placeholder="e.g., Senior Software Developer" />
+                            <span asp-validation-for="TitleName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Brief description of the job title..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <h5 class="border-bottom pb-2 mb-3 mt-4">
+                            <i class="bi bi-currency-dollar"></i> Salary Range (Optional)
+                        </h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="MinSalary" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="MinSalary" class="form-control" placeholder="0.00" />
+                                </div>
+                                <span asp-validation-for="MinSalary" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaxSalary" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input asp-for="MaxSalary" class="form-control" placeholder="0.00" />
+                                </div>
+                                <span asp-validation-for="MaxSalary" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Salary range helps define typical compensation for this role.
+                        </small>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Create Job Title
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
