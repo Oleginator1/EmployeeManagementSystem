@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -126,7 +127,7 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User logged in.");
 
-                   
+                    // Log ONLY ONCE - remove any duplicate logging
                     await LogLoginEventAsync(Input.Email, "Login Successful", null);
 
                     return LocalRedirect(returnUrl);
@@ -135,20 +136,15 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
-
-                    
                     await LogLoginEventAsync(Input.Email, "Account Locked Out",
                         "Account locked due to too many failed login attempts.");
-
                     return RedirectToPage("./Lockout");
                 }
                 else
                 {
-                    // Get current failed count to include in log
                     var user = await _userManager.FindByEmailAsync(Input.Email);
                     var failedCount = user != null ? user.AccessFailedCount : 0;
 
-                    // Log failed attempt with count
                     await LogLoginEventAsync(Input.Email, "Login Failed",
                         $"Failed login attempt. Total failed attempts: {failedCount}");
 
@@ -160,6 +156,7 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
             return Page();
         }
 
+        
         private async Task LogLoginEventAsync(string email, string action, string? details)
         {
             try
@@ -168,15 +165,26 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
                 var context = scope.ServiceProvider
                     .GetRequiredService<ApplicationDbContext>();
 
-                context.AuditLogs.Add(new EmployeeManagementSystem.Models.Entities.AuditLog
-                {
-                    Action = action,
-                    UserId = email,
-                    Details = details,
-                    Timestamp = DateTime.Now
-                });
+               
+                var recentLog = await context.AuditLogs
+                    .AsNoTracking()
+                    .Where(a => a.UserId == email
+                        && a.Action == action
+                        && a.Timestamp > DateTime.Now.AddSeconds(-5))
+                    .AnyAsync();
 
-                await context.SaveChangesAsync();
+                if (!recentLog)
+                {
+                    context.AuditLogs.Add(new EmployeeManagementSystem.Models.Entities.AuditLog
+                    {
+                        Action = action,
+                        UserId = email,
+                        Details = details,
+                        Timestamp = DateTime.Now
+                    });
+
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {

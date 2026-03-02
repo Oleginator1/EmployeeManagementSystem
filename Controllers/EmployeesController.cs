@@ -135,7 +135,7 @@ namespace EmployeeManagementSystem.Controllers
             return View(searchModel);
         }
 
-        [Authorize(Policy = "AdminOrManager")]
+        // GET: Employees/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -146,17 +146,22 @@ namespace EmployeeManagementSystem.Controllers
             var employee = await _context.Employees
                 .Include(e => e.Department)
                 .Include(e => e.JobTitle)
-                .FirstOrDefaultAsync(m => m.EmployeeId == id);
+                .FirstOrDefaultAsync(e => e.EmployeeId == id);
 
             if (employee == null)
             {
                 return NotFound();
             }
 
-            var yearsOfService = DateTime.Now.Year - employee.HireDate.Year;
-            if (DateTime.Now.DayOfYear < employee.HireDate.DayOfYear)
+            if (User.IsInRole("Employee") && !User.IsInRole("Admin") && !User.IsInRole("Manager"))
             {
-                yearsOfService--; 
+                var userEmail = _userService.GetCurrentUserEmail();
+                if (userEmail == null || employee.Email.ToLower() != userEmail.ToLower())
+                {
+                    
+                    TempData["ErrorMessage"] = "You can only view your own employee profile.";
+                    return RedirectToAction("Index", "Home");
+                }
             }
 
             var viewModel = new EmployeeDetailsViewModel
@@ -171,12 +176,12 @@ namespace EmployeeManagementSystem.Controllers
                 JobTitleName = employee.JobTitle?.TitleName ?? "N/A",
                 Salary = employee.Salary,
                 HireDate = employee.HireDate,
+                ProfilePhotoPath = employee.ProfilePhotoPath,
                 IsActive = employee.IsActive,
                 Status = employee.IsActive ? "Active" : "Inactive",
-                ProfilePhotoPath = employee.ProfilePhotoPath,
                 CreatedDate = employee.CreatedDate,
                 ModifiedDate = employee.ModifiedDate,
-                YearsOfService = yearsOfService
+                YearsOfService = DateTime.Now.Year - employee.HireDate.Year
             };
 
             return View(viewModel);
@@ -417,7 +422,7 @@ namespace EmployeeManagementSystem.Controllers
 
 
 
-        [Authorize(Policy = "AdminOrManager")]
+        [Authorize]
         public async Task<IActionResult> ExportPdf(EmployeeSearchViewModel searchModel)
         {
             // Build same query as Index
@@ -512,7 +517,7 @@ namespace EmployeeManagementSystem.Controllers
         
 
 
-        [Authorize(Policy = "AdminOrManager")]
+        [Authorize]
         public async Task<IActionResult> ExportDetailsPdf(int id)
         {
             var employee = await _context.Employees

@@ -1,0 +1,87 @@
+﻿/* Home Page Custom Styles */
+
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+
+    .hero-section h1 {
+        color: white;
+    }
+
+    .hero-section .lead {
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    /* Make sure buttons are visible on purple background */
+    .hero-section .btn-light {
+        background-color: white;
+        color: #667eea;
+        border: none;
+    }
+
+        .hero-section .btn-light:hover {
+            background-color: #f8f9fa;
+            color: #764ba2;
+        }
+
+    .hero-section .btn-outline-light {
+        border-color: white;
+        color: white;
+    }
+
+        .hero-section .btn-outline-light:hover {
+            background-color: white;
+            color: #667eea;
+        }
+
+/* Backdrop blur effect for the visualization card */
+.backdrop-blur {
+    backdrop-filter: blur(10px);
+}
+
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-outline-success:hover,
+.btn-outline-info:hover {
+    transform: translateY(-2px);
+    transition: all 0.2s;
+}
+
+.list-group-item {
+    transition: background-color 0.2s;
+}
+
+    .list-group-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+/* Stat cards footer links */
+.card-footer a {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Quick action buttons */
+.btn.py-3 {
+    height: 100%;
+}
+
+    .btn.py-3 i {
+        opacity: 0.8;
+    }
+
+    .btn.py-3:hover i {
+        opacity: 1;
+    }

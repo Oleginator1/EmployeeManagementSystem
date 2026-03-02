@@ -1,8 +1,573 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model EmployeeManagementSystem.Models.ViewModels.HomeIndexViewModel
+
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@if (!Model.IsAuthenticated)
+{
+    @* Landing page for non-authenticated users *@
+    <div class="text-center">
+        <div class="hero-section py-5 my-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 text-white">
+                        <h1 class="display-3 fw-bold mb-4">
+                            <i class="bi bi-people-fill"></i>
+                            Employee Management System
+                        </h1>
+                        <p class="lead mb-4">
+                            Streamline your workforce management with our comprehensive
+                            employee management platform. Track employees, manage departments,
+                            and maintain detailed records all in one place.
+                        </p>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-light btn-lg px-4 me-md-2">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                            <a href="#features" class="btn btn-outline-light btn-lg px-4">
+                                Learn More
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mt-4 mt-lg-0">
+                        @* Placeholder visualization instead of missing image *@
+                        <div class="bg-white bg-opacity-10 backdrop-blur rounded-3 p-5" style="min-height: 350px;">
+                            <div class="text-center text-white">
+                                <i class="bi bi-diagram-3 display-1 mb-3 d-block"></i>
+                                <h3 class="mb-3">Professional Workforce Management</h3>
+                                <div class="d-flex justify-content-center gap-3 mt-4">
+                                    <div class="text-center">
+                                        <i class="bi bi-people fs-2 d-block mb-2"></i>
+                                        <small>Employee Records</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="bi bi-building fs-2 d-block mb-2"></i>
+                                        <small>Departments</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <i class="bi bi-file-earmark-pdf fs-2 d-block mb-2"></i>
+                                        <small>Reports</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Features Section *@
+        <div id="features" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="text-center mb-5">Key Features</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <i class="bi bi-person-badge display-4 text-primary mb-3"></i>
+                                <h5 class="card-title">Employee Records</h5>
+                                <p class="card-text">
+                                    Comprehensive employee profiles with photos, contact information,
+                                    and employment history.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <i class="bi bi-building display-4 text-success mb-3"></i>
+                                <h5 class="card-title">Department Management</h5>
+                                <p class="card-text">
+                                    Organize your workforce by departments and job titles
+                                    with flexible hierarchies.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <i class="bi bi-file-earmark-pdf display-4 text-danger mb-3"></i>
+                                <h5 class="card-title">Reports & Export</h5>
+                                <p class="card-text">
+                                    Generate detailed reports and export data to PDF or CSV
+                                    for analysis and record-keeping.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <i class="bi bi-shield-lock display-4 text-warning mb-3"></i>
+                                <h5 class="card-title">Role-Based Security</h5>
+                                <p class="card-text">
+                                    Control access with admin, manager, and employee roles.
+                                    Track all actions with comprehensive audit logs.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <i class="bi bi-search display-4 text-info mb-3"></i>
+                                <h5 class="card-title">Advanced Search</h5>
+                                <p class="card-text">
+                                    Find employees quickly with powerful search and filtering
+                                    by department, job title, status, and more.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 text-center border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <i class="bi bi-graph-up display-4 text-secondary mb-3"></i>
+                                <h5 class="card-title">Analytics Dashboard</h5>
+                                <p class="card-text">
+                                    View key metrics, statistics, and trends to make
+                                    data-driven workforce decisions.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @* Dashboard for authenticated users *@
+    <div class="container-fluid mt-4">
+        @* Welcome Header *@
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-5">
+                    Welcome back, @Model.UserName!
+                </h1>
+                <p class="lead text-muted">
+                    <i class="bi bi-person-badge"></i> @Model.UserRole
+                    @if (Model.HireDate.HasValue)
+                    {
+                        <span class="ms-3">
+                            <i class="bi bi-calendar-check"></i>
+                            @Model.YearsOfService year(s) of service
+                        </span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        @if (Model.IsAdmin || Model.IsManager)
+        {
+            @* Admin/Manager Dashboard *@
+
+            @* Statistics Cards *@
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-1">Total Employees</h6>
+                                    <h2 class="mb-0">@Model.TotalEmployees</h2>
+                                    <small>@Model.ActiveEmployees active</small>
+                                </div>
+                                <i class="bi bi-people fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white bg-opacity-25">
+                            <a asp-controller="Employees" asp-action="Index" class="text-white text-decoration-none">
+                                View All <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-success text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-1">Departments</h6>
+                                    <h2 class="mb-0">@Model.TotalDepartments</h2>
+                                    <small>Active departments</small>
+                                </div>
+                                <i class="bi bi-building fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white bg-opacity-25">
+                            @if (Model.IsAdmin)
+                            {
+                                <a asp-controller="Departments" asp-action="Index" class="text-white text-decoration-none">
+                                    Manage <i class="bi bi-arrow-right"></i>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-white">Departments Overview</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-info text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-1">Job Titles</h6>
+                                    <h2 class="mb-0">@Model.TotalJobTitles</h2>
+                                    <small>Different positions</small>
+                                </div>
+                                <i class="bi bi-briefcase fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white bg-opacity-25">
+                            @if (Model.IsAdmin)
+                            {
+                                <a asp-controller="JobTitles" asp-action="Index" class="text-white text-decoration-none">
+                                    Manage <i class="bi bi-arrow-right"></i>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-white">Job Titles Overview</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-1">Avg Salary</h6>
+                                    <h2 class="mb-0">@Model.AverageSalary.ToString("C0")</h2>
+                                    <small>@Model.NewEmployeesThisMonth new this month</small>
+                                </div>
+                                <i class="bi bi-currency-dollar fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white bg-opacity-25">
+                            <span>Company Average</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Charts and Recent Activity Row *@
+            <div class="row">
+                @* Employees by Department Chart *@
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-pie-chart"></i> Employees by Department
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.EmployeesByDepartment != null && Model.EmployeesByDepartment.Any())
+                            {
+                                <canvas id="departmentChart" style="max-height: 300px;"></canvas>
+
+                               
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        Data:
+                                        @foreach (var dept in Model.EmployeesByDepartment)
+                                        {
+                                            <span class="badge bg-secondary me-1">@dept.Key: @dept.Value</span>
+                                        }
+                                    </small>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i>
+                                    No active employees with assigned departments found.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* Recent Activity *@
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock-history"></i> Recent Activity
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentActivities.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var activity in Model.RecentActivities)
+                                    {
+                                        <div class="list-group-item border-0 px-0">
+                                            <div class="d-flex">
+                                                <div class="me-3">
+                                                    <span class="badge bg-@activity.BadgeColor rounded-circle p-2">
+                                                        <i class="@activity.Icon"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">@activity.Action</div>
+                                                    <small class="text-muted">
+                                                        @activity.User • @activity.Timestamp.ToString("MMM dd, HH:mm")
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (Model.IsAdmin)
+                                {
+                                    <div class="text-center mt-3">
+                                        <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                                            View All Logs <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted text-center py-5">No recent activity</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Quick Actions *@
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-lightning"></i> Quick Actions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <a asp-controller="Employees" asp-action="Create" class="btn btn-outline-primary w-100 py-3">
+                                        <i class="bi bi-person-plus d-block fs-3 mb-2"></i>
+                                        Add Employee
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-secondary w-100 py-3">
+                                        <i class="bi bi-search d-block fs-3 mb-2"></i>
+                                        Search Employees
+                                    </a>
+                                </div>
+                                @if (Model.IsAdmin)
+                                {
+                                    <div class="col-md-3">
+                                        <a asp-controller="Departments" asp-action="Create" class="btn btn-outline-success w-100 py-3">
+                                            <i class="bi bi-building-add d-block fs-3 mb-2"></i>
+                                            Add Department
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a asp-controller="Users" asp-action="Index" class="btn btn-outline-info w-100 py-3">
+                                            <i class="bi bi-person-gear d-block fs-3 mb-2"></i>
+                                            Manage Users
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            @* Employee Dashboard *@
+            <div class="row">
+                <div class="col-md-8 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-badge"></i> My Profile
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.EmployeeId.HasValue)
+                            {
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-4">Name:</dt>
+                                    <dd class="col-sm-8">@Model.EmployeeName</dd>
+
+                                    <dt class="col-sm-4">Department:</dt>
+                                    <dd class="col-sm-8">@Model.Department</dd>
+
+                                    <dt class="col-sm-4">Job Title:</dt>
+                                    <dd class="col-sm-8">@Model.JobTitle</dd>
+
+                                    <dt class="col-sm-4">Hire Date:</dt>
+                                    <dd class="col-sm-8">@Model.HireDate?.ToString("MMMM dd, yyyy")</dd>
+
+                                    <dt class="col-sm-4">Years of Service:</dt>
+                                    <dd class="col-sm-8">@Model.YearsOfService year(s)</dd>
+                                </dl>
+
+                                <div class="mt-4">
+                                    <a asp-controller="Employees"
+                                       asp-action="Details"
+                                       asp-route-id="@Model.EmployeeId"
+                                       class="btn btn-primary">
+                                        <i class="bi bi-eye"></i> View Full Profile
+                                    </a>
+                                    <a asp-controller="UserProfile" asp-action="Index" class="btn btn-outline-secondary">
+                                        <i class="bi bi-person"></i> Account Settings
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <strong>No Employee Record Found</strong>
+                                    <p class="mb-2 mt-2">
+                                        Your user account is not linked to an employee record in the system.
+                                    </p>
+                                    <p class="mb-0">
+                                        Please contact your administrator to link your account or create your employee profile.
+                                    </p>
+                                </div>
+                                <div class="mt-3">
+                                    <a asp-controller="UserProfile" asp-action="Index" class="btn btn-primary">
+                                        <i class="bi bi-person"></i> Account Settings
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check"></i> Quick Links
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">                                
+                                <a asp-controller="UserProfile" asp-action="ChangePassword" class="btn btn-outline-warning">
+                                    <i class="bi bi-key"></i> Change Password
+                                </a>
+                                <a asp-controller="UserProfile" asp-action="Security" class="btn btn-outline-secondary">
+                                    <i class="bi bi-shield-check"></i> Security Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Recent Activity for Employee *@
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock-history"></i> Recent System Activity
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.RecentActivities.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var activity in Model.RecentActivities)
+                                    {
+                                        <div class="list-group-item border-0">
+                                            <div class="d-flex">
+                                                <div class="me-3">
+                                                    <span class="badge bg-@activity.BadgeColor rounded-circle p-2">
+                                                        <i class="@activity.Icon"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">@activity.Action</div>
+                                                    <small class="text-muted">
+                                                        @activity.Timestamp.ToString("MMM dd, yyyy HH:mm")
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted text-center py-5">No recent activity</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    @if (Model.IsAuthenticated && (Model.IsAdmin || Model.IsManager))
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            // Department Distribution Chart
+            @if (Model.EmployeesByDepartment.Any())
+            {
+                    <text>
+                    const ctx = document.getElementById('departmentChart');
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EmployeesByDepartment.Keys)),
+                                datasets: [{
+                                    label: 'Employees',
+                                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EmployeesByDepartment.Values)),
+                                    backgroundColor: [
+                                        '#0d6efd',
+                                        '#198754',
+                                        '#ffc107',
+                                        '#dc3545',
+                                        '#0dcaf0',
+                                        '#6610f2',
+                                        '#fd7e14'
+                                    ],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    </text>
+            }
+        </script>
+    }
+}

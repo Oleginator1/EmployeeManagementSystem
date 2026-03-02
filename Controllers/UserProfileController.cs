@@ -264,7 +264,7 @@ namespace EmployeeManagementSystem.Controllers
             return View(viewModel);
         }
 
-       
+
 
         // GET: UserProfile/MyEmployee
         public async Task<IActionResult> MyEmployee()
@@ -279,9 +279,7 @@ namespace EmployeeManagementSystem.Controllers
 
             if (employee == null)
             {
-                TempData["InfoMessage"] = "No employee record is linked to your account. " +
-                    "Your account email must match your employee record email, " +
-                    "or an admin must link your account manually.";
+                TempData["InfoMessage"] = "No employee record is linked to your account...";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -289,7 +287,7 @@ namespace EmployeeManagementSystem.Controllers
         }
 
         // GET: UserProfile/LinkEmployee 
-        
+
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> LinkEmployee(string userId)
         {
