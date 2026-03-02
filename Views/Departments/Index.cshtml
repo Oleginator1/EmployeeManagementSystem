@@ -1,11 +1,7 @@
-﻿@model IEnumerable<EmployeeManagementSystem.Models.ViewModels.DepartmentViewModel>
+﻿@model EmployeeManagementSystem.Models.ViewModels.DepartmentSearchViewModel
 
 @{
     ViewData["Title"] = "Departments";
-    var searchTerm = ViewData["SearchTerm"] as string;
-    var sortBy = ViewData["SortBy"] as string;
-    var sortOrder = ViewData["SortOrder"] as string;
-    var nextSortOrder = ViewData["NextSortOrder"] as string;
 }
 
 <div class="container mt-4">
@@ -19,18 +15,18 @@
             <a asp-action="Create" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Add New Department
             </a>
-                        
+
             <a asp-action="ExportPdf"
-               asp-route-searchTerm="@ViewData["SearchTerm"]"
-               asp-route-sortBy="@ViewData["SortBy"]"
-               asp-route-sortOrder="@ViewData["SortOrder"]"
+               asp-route-searchTerm="@Model.SearchTerm"
+               asp-route-sortBy="@Model.SortBy"
+               asp-route-sortOrder="@Model.SortOrder"
                class="btn btn-danger">
                 <i class="bi bi-file-pdf"></i> Export PDF
             </a>
         </div>
     </div>
 
-    
+    @* Success/Error Messages *@
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -52,12 +48,20 @@
         <div class="card-body">
             <form asp-action="Index" method="get">
                 <div class="row g-3">
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <input type="text"
                                name="searchTerm"
-                               value="@searchTerm"
+                               value="@Model.SearchTerm"
                                class="form-control"
                                placeholder="Search departments..." />
+                    </div>
+                    <div class="col-md-2">
+                        <select name="pageSize" class="form-select">
+                            <option value="10" selected="@(Model.PageSize == 10)">10 per page</option>
+                            <option value="25" selected="@(Model.PageSize == 25)">25 per page</option>
+                            <option value="50" selected="@(Model.PageSize == 50)">50 per page</option>
+                            <option value="100" selected="@(Model.PageSize == 100)">100 per page</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-secondary w-100">
@@ -70,6 +74,8 @@
                         </a>
                     </div>
                 </div>
+                <input type="hidden" name="sortBy" value="@Model.SortBy" />
+                <input type="hidden" name="sortOrder" value="@Model.SortOrder" />
             </form>
         </div>
     </div>
@@ -82,7 +88,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">Total Departments</h6>
-                            <h2 class="mb-0">@Model.Count()</h2>
+                            <h2 class="mb-0">@Model.TotalDepartments</h2>
                         </div>
                         <i class="bi bi-building fs-1"></i>
                     </div>
@@ -95,34 +101,28 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title">Total Employees</h6>
-                            <h2 class="mb-0">@Model.Sum(d => d.EmployeeCount)</h2>
+                            <h2 class="mb-0">@Model.TotalEmployees</h2>
                         </div>
                         <i class="bi bi-people fs-1"></i>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title">Avg Employees/Dept</h6>
-                            <h2 class="mb-0">
-                                @(Model.Any() ? Math.Round(Model.Average(d => d.EmployeeCount), 1) : 0)
-                            </h2>
-                        </div>
-                        <i class="bi bi-bar-chart fs-1"></i>
-                    </div>
-                </div>
-            </div>
+        </div>        
+    </div>
+
+    @* Results Info *@
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            Showing @((Model.PageNumber - 1) * Model.PageSize + 1)
+            to @(Math.Min(Model.PageNumber * Model.PageSize, Model.TotalRecords))
+            of @Model.TotalRecords departments
         </div>
     </div>
 
     @* Departments Table *@
     <div class="card">
         <div class="card-body">
-            @if (Model != null && Model.Any())
+            @if (Model.Departments != null && Model.Departments.Any())
             {
                 <div class="table-responsive">
                     <table class="table table-hover table-striped">
@@ -130,42 +130,48 @@
                             <tr>
                                 <th>
                                     <a asp-action="Index"
-                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-searchTerm="@Model.SearchTerm"
                                        asp-route-sortBy="name"
-                                       asp-route-sortOrder="@(sortBy == "name" ? nextSortOrder : "asc")"
+                                       asp-route-sortOrder="@(Model.SortBy == "name" && Model.SortOrder == "asc" ? "desc" : "asc")"
+                                       asp-route-pageNumber="@Model.PageNumber"
+                                       asp-route-pageSize="@Model.PageSize"
                                        class="text-white text-decoration-none">
                                         Department Name
-                                        @if (sortBy == "name")
+                                        @if (Model.SortBy == "name")
                                         {
-                                            <i class="bi bi-@(sortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
                                         }
                                     </a>
                                 </th>
                                 <th>Description</th>
                                 <th class="text-center">
                                     <a asp-action="Index"
-                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-searchTerm="@Model.SearchTerm"
                                        asp-route-sortBy="employeecount"
-                                       asp-route-sortOrder="@(sortBy == "employeecount" ? nextSortOrder : "desc")"
+                                       asp-route-sortOrder="@(Model.SortBy == "employeecount" && Model.SortOrder == "asc" ? "desc" : "asc")"
+                                       asp-route-pageNumber="@Model.PageNumber"
+                                       asp-route-pageSize="@Model.PageSize"
                                        class="text-white text-decoration-none">
-                                        Total Employees
-                                        @if (sortBy == "employeecount")
+                                        Employees
+                                        @if (Model.SortBy == "employeecount")
                                         {
-                                            <i class="bi bi-@(sortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
                                         }
                                     </a>
                                 </th>
-                                <th class="text-center">Active Employees</th>
+                                <th class="text-center">Active</th>
                                 <th>
                                     <a asp-action="Index"
-                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-searchTerm="@Model.SearchTerm"
                                        asp-route-sortBy="created"
-                                       asp-route-sortOrder="@(sortBy == "created" ? nextSortOrder : "desc")"
+                                       asp-route-sortOrder="@(Model.SortBy == "created" && Model.SortOrder == "asc" ? "desc" : "asc")"
+                                       asp-route-pageNumber="@Model.PageNumber"
+                                       asp-route-pageSize="@Model.PageSize"
                                        class="text-white text-decoration-none">
-                                        Created Date
-                                        @if (sortBy == "created")
+                                        Created
+                                        @if (Model.SortBy == "created")
                                         {
-                                            <i class="bi bi-@(sortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
+                                            <i class="bi bi-@(Model.SortOrder == "asc" ? "arrow-up" : "arrow-down")"></i>
                                         }
                                     </a>
                                 </th>
@@ -173,16 +179,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var department in Model)
+                            @foreach (var dept in Model.Departments)
                             {
                                 <tr>
                                     <td>
-                                        <strong>@department.Name</strong>
+                                        <strong>@dept.Name</strong>
                                     </td>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(department.Description))
+                                        @if (!string.IsNullOrEmpty(dept.Description))
                                         {
-                                            @(department.Description.Length > 50 ? department.Description.Substring(0, 50) + "..." : department.Description)
+                                            @(dept.Description.Length > 50 ? dept.Description.Substring(0, 50) + "..." : dept.Description)
                                         }
                                         else
                                         {
@@ -190,32 +196,32 @@
                                         }
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-primary fs-6">@department.EmployeeCount</span>
+                                        <span class="badge bg-primary fs-6">@dept.EmployeeCount</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-success fs-6">@department.ActiveEmployeeCount</span>
+                                        <span class="badge bg-success fs-6">@dept.ActiveEmployeeCount</span>
                                     </td>
                                     <td>
-                                        @department.CreatedDate.ToString("MMM dd, yyyy")
+                                        @dept.CreatedDate.ToString("MMM dd, yyyy")
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
                                             <a asp-action="Details"
-                                               asp-route-id="@department.DepartmentId"
+                                               asp-route-id="@dept.DepartmentId"
                                                class="btn btn-sm btn-info"
                                                title="View Details">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             <a asp-action="Edit"
-                                               asp-route-id="@department.DepartmentId"
+                                               asp-route-id="@dept.DepartmentId"
                                                class="btn btn-sm btn-warning"
                                                title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            @if (department.EmployeeCount == 0)
+                                            @if (dept.EmployeeCount == 0)
                                             {
                                                 <a asp-action="Delete"
-                                                   asp-route-id="@department.DepartmentId"
+                                                   asp-route-id="@dept.DepartmentId"
                                                    class="btn btn-sm btn-danger"
                                                    title="Delete">
                                                     <i class="bi bi-trash"></i>
@@ -236,12 +242,59 @@
                         </tbody>
                     </table>
                 </div>
+
+                @* Pagination *@
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Department pagination" class="mt-3">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-searchTerm="@Model.SearchTerm"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                                   asp-route-pageSize="@Model.PageSize">
+                                    Previous
+                                </a>
+                            </li>
+
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-route-searchTerm="@Model.SearchTerm"
+                                       asp-route-sortBy="@Model.SortBy"
+                                       asp-route-sortOrder="@Model.SortOrder"
+                                       asp-route-pageNumber="@i"
+                                       asp-route-pageSize="@Model.PageSize">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-searchTerm="@Model.SearchTerm"
+                                   asp-route-sortBy="@Model.SortBy"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                                   asp-route-pageSize="@Model.PageSize">
+                                    Next
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             }
             else
             {
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i> No departments found.
-                    @if (!string.IsNullOrEmpty(searchTerm))
+                    @if (!string.IsNullOrEmpty(Model.SearchTerm))
                     {
                         <br />
                         <a asp-action="Index" class="alert-link">Clear search to see all departments</a>
@@ -254,7 +307,6 @@
 
 @section Scripts {
     <script>
-        
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);

@@ -25,41 +25,63 @@ namespace EmployeeManagementSystem.Controllers
         }
 
 
-        public async Task<IActionResult> Index(string? searchTerm, string? sortBy, string? sortOrder)
+        // GET: JobTitles
+        public async Task<IActionResult> Index(JobTitleSearchViewModel searchModel)
         {
+            
+            if (searchModel.PageSize <= 0) searchModel.PageSize = 10;
+            if (searchModel.PageNumber <= 0) searchModel.PageNumber = 1;
+
             
             var query = _context.JobTitles
                 .Include(j => j.Employees)
                 .AsQueryable();
 
-            
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+          
+            if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
             {
-                var search = searchTerm.ToLower();
+                var search = searchModel.SearchTerm.ToLower();
                 query = query.Where(j =>
                     j.TitleName.ToLower().Contains(search) ||
                     (j.Description != null && j.Description.ToLower().Contains(search))
                 );
             }
 
-           
-            sortBy = sortBy?.ToLower() ?? "title";
-            sortOrder = sortOrder?.ToLower() ?? "asc";
+        
+            searchModel.TotalRecords = await query.CountAsync();
 
-            query = sortBy switch
+      
+            searchModel.SortBy = searchModel.SortBy?.ToLower() ?? "title";
+            searchModel.SortOrder = searchModel.SortOrder?.ToLower() ?? "asc";
+
+            query = searchModel.SortBy switch
             {
-                "title" => sortOrder == "desc" ? query.OrderByDescending(j => j.TitleName) : query.OrderBy(j => j.TitleName),
-                "employeecount" => sortOrder == "desc" ? query.OrderByDescending(j => j.Employees.Count) : query.OrderBy(j => j.Employees.Count),
-                "minsalary" => sortOrder == "desc" ? query.OrderByDescending(j => j.MinSalary) : query.OrderBy(j => j.MinSalary),
-                "maxsalary" => sortOrder == "desc" ? query.OrderByDescending(j => j.MaxSalary) : query.OrderBy(j => j.MaxSalary),
-                "created" => sortOrder == "desc" ? query.OrderByDescending(j => j.CreatedDate) : query.OrderBy(j => j.CreatedDate),
+                "title" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(j => j.TitleName)
+                    : query.OrderBy(j => j.TitleName),
+                "employeecount" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(j => j.Employees.Count)
+                    : query.OrderBy(j => j.Employees.Count),
+                "minsalary" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(j => j.MinSalary)
+                    : query.OrderBy(j => j.MinSalary),
+                "maxsalary" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(j => j.MaxSalary)
+                    : query.OrderBy(j => j.MaxSalary),
+                "created" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(j => j.CreatedDate)
+                    : query.OrderBy(j => j.CreatedDate),
                 _ => query.OrderBy(j => j.TitleName)
             };
 
-            var jobTitles = await query.ToListAsync();
-
            
-            var viewModel = jobTitles.Select(j => new JobTitleViewModel
+            var jobTitles = await query
+                .Skip((searchModel.PageNumber - 1) * searchModel.PageSize)
+                .Take(searchModel.PageSize)
+                .ToListAsync();
+
+         
+            searchModel.JobTitles = jobTitles.Select(j => new JobTitleViewModel
             {
                 JobTitleId = j.JobTitleId,
                 TitleName = j.TitleName,
@@ -69,16 +91,14 @@ namespace EmployeeManagementSystem.Controllers
                 CreatedDate = j.CreatedDate
             }).ToList();
 
-            
-            ViewData["SearchTerm"] = searchTerm;
-            ViewData["SortBy"] = sortBy;
-            ViewData["SortOrder"] = sortOrder;
-            ViewData["NextSortOrder"] = sortOrder == "asc" ? "desc" : "asc";
+         
+            searchModel.TotalJobTitles = await _context.JobTitles.CountAsync();
+            searchModel.TotalEmployees = await _context.Employees.CountAsync();
 
-            return View(viewModel);
+            return View(searchModel);
         }
 
-      
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)

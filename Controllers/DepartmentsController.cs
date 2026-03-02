@@ -25,17 +25,22 @@ namespace EmployeeManagementSystem.Controllers
         }
 
 
-        public async Task<IActionResult> Index(string? searchTerm, string? sortBy, string? sortOrder)
+        // GET: Departments
+        public async Task<IActionResult> Index(DepartmentSearchViewModel searchModel)
         {
+            
+            if (searchModel.PageSize <= 0) searchModel.PageSize = 10;
+            if (searchModel.PageNumber <= 0) searchModel.PageNumber = 1;
+
            
             var query = _context.Departments
                 .Include(d => d.Employees)
                 .AsQueryable();
 
-         
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+           
+            if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
             {
-                var search = searchTerm.ToLower();
+                var search = searchModel.SearchTerm.ToLower();
                 query = query.Where(d =>
                     d.Name.ToLower().Contains(search) ||
                     (d.Description != null && d.Description.ToLower().Contains(search))
@@ -43,37 +48,48 @@ namespace EmployeeManagementSystem.Controllers
             }
 
             
-            sortBy = sortBy?.ToLower() ?? "name";
-            sortOrder = sortOrder?.ToLower() ?? "asc";
+            searchModel.TotalRecords = await query.CountAsync();
 
-            query = sortBy switch
+       
+            searchModel.SortBy = searchModel.SortBy?.ToLower() ?? "name";
+            searchModel.SortOrder = searchModel.SortOrder?.ToLower() ?? "asc";
+
+            query = searchModel.SortBy switch
             {
-                "name" => sortOrder == "desc" ? query.OrderByDescending(d => d.Name) : query.OrderBy(d => d.Name),
-                "employeecount" => sortOrder == "desc" ? query.OrderByDescending(d => d.Employees.Count) : query.OrderBy(d => d.Employees.Count),
-                "created" => sortOrder == "desc" ? query.OrderByDescending(d => d.CreatedDate) : query.OrderBy(d => d.CreatedDate),
+                "name" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(d => d.Name)
+                    : query.OrderBy(d => d.Name),
+                "employeecount" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(d => d.Employees.Count)
+                    : query.OrderBy(d => d.Employees.Count),
+                "created" => searchModel.SortOrder == "desc"
+                    ? query.OrderByDescending(d => d.CreatedDate)
+                    : query.OrderBy(d => d.CreatedDate),
                 _ => query.OrderBy(d => d.Name)
             };
 
-            var departments = await query.ToListAsync();
+            // Apply pagination
+            var departments = await query
+                .Skip((searchModel.PageNumber - 1) * searchModel.PageSize)
+                .Take(searchModel.PageSize)
+                .ToListAsync();
 
             
-            var viewModel = departments.Select(d => new DepartmentViewModel
+            searchModel.Departments = departments.Select(d => new DepartmentViewModel
             {
                 DepartmentId = d.DepartmentId,
                 Name = d.Name,
-                Description = d.Description,  
+                Description = d.Description,
                 EmployeeCount = d.Employees.Count,
                 ActiveEmployeeCount = d.Employees.Count(e => e.IsActive),
                 CreatedDate = d.CreatedDate
             }).ToList();
 
             
-            ViewData["SearchTerm"] = searchTerm;
-            ViewData["SortBy"] = sortBy;
-            ViewData["SortOrder"] = sortOrder;
-            ViewData["NextSortOrder"] = sortOrder == "asc" ? "desc" : "asc";
+            searchModel.TotalDepartments = await _context.Departments.CountAsync();
+            searchModel.TotalEmployees = await _context.Employees.CountAsync();
 
-            return View(viewModel);
+            return View(searchModel);
         }
 
 
