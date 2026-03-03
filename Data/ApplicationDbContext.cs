@@ -13,6 +13,7 @@ namespace EmployeeManagementSystem.Data
         public DbSet<Department> Departments { get; set; }
         public DbSet<JobTitle> JobTitles { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
