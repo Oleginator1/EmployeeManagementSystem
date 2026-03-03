@@ -3,6 +3,8 @@
 #nullable disable
 
 using EmployeeManagementSystem.Data;
+using EmployeeManagementSystem.Models.Entities;
+using EmployeeManagementSystem.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -24,15 +26,18 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly ISessionService _sessionService;
 
         public LoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
-            ILogger<LoginModel> logger)
+            ILogger<LoginModel> logger,
+            ISessionService sessionService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _logger = logger;
+            _sessionService = sessionService;
         }
 
         /// <summary>
@@ -127,8 +132,24 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User logged in.");
 
-                    // Log ONLY ONCE - remove any duplicate logging
-                    await LogLoginEventAsync(Input.Email, "Login Successful", null);
+                    // Get user info for session
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (user != null)
+                    {
+                        var roles = await _userManager.GetRolesAsync(user);
+                        var primaryRole = roles.FirstOrDefault() ?? "Employee";
+
+                       
+                        await _sessionService.CreateSessionAsync(
+                            user.Id,
+                            user.Email!,
+                            primaryRole,
+                            HttpContext);
+
+                       
+                        await LogLoginEventAsync(Input.Email, "Login Successful",
+                            $"Device: {HttpContext.Request.Headers["User-Agent"]}");
+                    }
 
                     return LocalRedirect(returnUrl);
                 }
@@ -156,7 +177,7 @@ namespace EmployeeManagementSystem.Areas.Identity.Pages.Account
             return Page();
         }
 
-        
+
         private async Task LogLoginEventAsync(string email, string action, string? details)
         {
             try
