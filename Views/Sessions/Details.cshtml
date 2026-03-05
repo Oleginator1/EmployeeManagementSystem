@@ -1,0 +1,226 @@
+﻿@model EmployeeManagementSystem.Models.Entities.UserSession
+
+@{
+    ViewData["Title"] = "Session Details";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-shield-lock"></i> Session Details
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @* Session Status Badge *@
+                    <div class="mb-4 text-center">
+                        @switch (Model.Status)
+                        {
+                            case "Active":
+                                <span class="badge bg-success fs-4 px-4 py-2">
+                                    <i class="bi bi-circle-fill"></i> Active Session
+                                </span>
+                                break;
+                            case "Ended":
+                                <span class="badge bg-secondary fs-4 px-4 py-2">
+                                    <i class="bi bi-check-circle"></i> Ended Normally
+                                </span>
+                                break;
+                            case "Expired":
+                                <span class="badge bg-warning text-dark fs-4 px-4 py-2">
+                                    <i class="bi bi-clock"></i> Expired (Timeout)
+                                </span>
+                                break;
+                            case "ForcedLogout":
+                                <span class="badge bg-danger fs-4 px-4 py-2">
+                                    <i class="bi bi-x-circle"></i> Force Logged Out
+                                </span>
+                                break;
+                        }
+                    </div>
+
+                    @* User Information *@
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-person"></i> User Information
+                    </h5>
+                    <dl class="row">
+                        <dt class="col-sm-3">Email:</dt>
+                        <dd class="col-sm-9">
+                            <strong>@Model.UserEmail</strong>
+                        </dd>
+
+                        <dt class="col-sm-3">User ID:</dt>
+                        <dd class="col-sm-9">
+                            <code>@Model.UserId</code>
+                        </dd>
+
+                        <dt class="col-sm-3">Role:</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-@(Model.UserRole switch
+                                  {
+                                      "Admin" => "danger",
+                                      "Manager" => "warning text-dark",
+                                      _ => "info"
+                                  })">
+                                @Model.UserRole
+                            </span>
+                        </dd>
+                    </dl>
+
+                    @* Session Timing *@
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">
+                        <i class="bi bi-clock"></i> Session Timing
+                    </h5>
+                    <dl class="row">
+                        <dt class="col-sm-3">Login Time:</dt>
+                        <dd class="col-sm-9">
+                            <i class="bi bi-box-arrow-in-right text-success"></i>
+                            @Model.LoginTime.ToString("MMMM dd, yyyy hh:mm:ss tt")
+                        </dd>
+
+                        <dt class="col-sm-3">Logout Time:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.LogoutTime.HasValue)
+                            {
+                                <i class="bi bi-box-arrow-right text-danger"></i>
+                                @Model.LogoutTime.Value.ToString("MMMM dd, yyyy hh:mm:ss tt")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Still active</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Duration:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.SessionDurationMinutes.HasValue)
+                            {
+                                var duration = TimeSpan.FromMinutes(Model.SessionDurationMinutes.Value);
+                                <span class="badge bg-secondary fs-6">
+                                    @if (duration.TotalHours >= 1)
+                                    {
+                                        <span>@((int)duration.TotalHours)h @duration.Minutes m</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@duration.Minutes min</span>
+                                    }
+                                </span>
+                            }
+                            else if (Model.Status == "Active")
+                            {
+                                var currentDuration = DateTime.Now - Model.LoginTime;
+                                <span class="badge bg-success fs-6">
+                                    Currently: @((int)currentDuration.TotalMinutes) min
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Unknown</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    @* Device Information *@
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">
+                        <i class="bi bi-laptop"></i> Device Information
+                    </h5>
+                    <dl class="row">
+                        <dt class="col-sm-3">Device Type:</dt>
+                        <dd class="col-sm-9">
+                            <i class="bi bi-@(Model.DeviceType?.ToLower() switch
+                               {
+                                   "mobile" => "phone",
+                                   "tablet" => "tablet",
+                                   _ => "laptop"
+                               })"></i>
+                            @Model.DeviceType
+                        </dd>
+
+                        <dt class="col-sm-3">Browser:</dt>
+                        <dd class="col-sm-9">
+                            <i class="bi bi-@(Model.Browser?.ToLower() switch
+                               {
+                                   "chrome" => "browser-chrome",
+                                   "firefox" => "browser-firefox",
+                                   "edge" => "browser-edge",
+                                   "safari" => "browser-safari",
+                                   _ => "globe"
+                               })"></i>
+                            @Model.Browser
+                        </dd>
+
+                        <dt class="col-sm-3">IP Address:</dt>
+                        <dd class="col-sm-9">
+                            <code>@Model.IpAddress</code>
+                        </dd>
+
+                        <dt class="col-sm-3">User Agent:</dt>
+                        <dd class="col-sm-9">
+                            <small class="text-muted">@Model.UserAgent</small>
+                        </dd>
+                    </dl>
+
+                    @* Security Information *@
+                    <h5 class="border-bottom pb-2 mb-3 mt-4">
+                        <i class="bi bi-shield-check"></i> Security Information
+                    </h5>
+                    <dl class="row">
+                        <dt class="col-sm-3">Session Token:</dt>
+                        <dd class="col-sm-9">
+                            <code class="small">@Model.SessionToken</code>
+                        </dd>
+
+                        <dt class="col-sm-3">Suspicious:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.IsSuspicious)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-exclamation-triangle"></i> Yes
+                                </span>
+                                @if (!string.IsNullOrEmpty(Model.SuspiciousReason))
+                                {
+                                    <br />
+                                    <small class="text-muted">Reason: @Model.SuspiciousReason</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> No
+                                </span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Created:</dt>
+                        <dd class="col-sm-9">
+                            @Model.CreatedDate.ToString("MMMM dd, yyyy hh:mm:ss tt")
+                        </dd>
+                    </dl>
+
+                    @* Actions *@
+                    <div class="mt-4">
+                        @if (Model.Status == "Active")
+                        {
+                            <form asp-action="ForceLogout"
+                                  asp-route-id="@Model.SessionId"
+                                  method="post"
+                                  style="display:inline"
+                                  onsubmit="return confirm('Force logout this session?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-x-circle"></i> Force Logout
+                                </button>
+                            </form>
+                        }
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Sessions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

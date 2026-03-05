@@ -39,18 +39,41 @@ namespace EmployeeManagementSystem.Controllers
                 .Include(e => e.JobTitle)
                 .AsQueryable();
 
-            
+
+
+          
             if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
             {
-                var searchTerm = searchModel.SearchTerm.ToLower();
-                query = query.Where(e =>
-                    e.FirstName.ToLower().Contains(searchTerm) ||
-                    e.LastName.ToLower().Contains(searchTerm) ||
-                    e.Email.ToLower().Contains(searchTerm)
-                );
+                var search = searchModel.SearchTerm.ToLower().Trim();
+
+                // Get employee IDs that match via standard text search
+                var textMatchIds = await query
+                    .Where(e =>
+                        e.FirstName.ToLower().Contains(search) ||
+                        e.LastName.ToLower().Contains(search) ||
+                        e.Email.ToLower().Contains(search) ||
+                        (e.Phone != null && e.Phone.Contains(search))
+                    )
+                    .Select(e => e.EmployeeId)
+                    .ToListAsync();
+
+                // Get employee IDs that match via phonetic search (SOUNDEX)
+                var phoneticMatchIds = await _context.Employees
+                    .FromSqlRaw(@"
+                        SELECT * FROM Employees 
+                        WHERE SOUNDEX(FirstName) = SOUNDEX({0})
+                           OR SOUNDEX(LastName) = SOUNDEX({0})",
+                        search)
+                    .Select(e => e.EmployeeId)
+                    .ToListAsync();
+
+                
+                var matchingIds = textMatchIds.Union(phoneticMatchIds).Distinct().ToList();
+
+                query = query.Where(e => matchingIds.Contains(e.EmployeeId));
             }
 
-            
+
             if (searchModel.DepartmentFilter.HasValue)
             {
                 query = query.Where(e => e.DepartmentId == searchModel.DepartmentFilter.Value);

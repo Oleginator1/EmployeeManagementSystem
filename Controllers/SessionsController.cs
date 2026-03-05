@@ -30,16 +30,36 @@ namespace EmployeeManagementSystem.Controllers
           
             var query = _context.UserSessions.AsNoTracking().AsQueryable();
 
+
+
            
             if (!string.IsNullOrWhiteSpace(model.SearchTerm))
             {
                 var search = model.SearchTerm.ToLower();
-                query = query.Where(s =>
-                    s.UserEmail.ToLower().Contains(search) ||
-                    (s.IpAddress != null && s.IpAddress.Contains(search)));
+
+                
+                var textMatchIds = await query
+                    .Where(s =>
+                        s.UserEmail.ToLower().Contains(search) ||
+                        (s.IpAddress != null && s.IpAddress.Contains(search))
+                    )
+                    .Select(s => s.SessionId)
+                    .ToListAsync();
+
+             
+                var phoneticMatchIds = await _context.UserSessions
+                    .FromSqlRaw(@"
+                         SELECT * FROM UserSessions 
+                         WHERE SOUNDEX(UserEmail) = SOUNDEX({0})",
+                         search)
+                    .Select(s => s.SessionId)
+                    .ToListAsync();
+
+                var matchingIds = textMatchIds.Union(phoneticMatchIds).Distinct().ToList();
+                query = query.Where(s => matchingIds.Contains(s.SessionId));
             }
 
-            
+
             if (!string.IsNullOrEmpty(model.StatusFilter))
             {
                 query = query.Where(s => s.Status == model.StatusFilter);
@@ -137,6 +157,7 @@ namespace EmployeeManagementSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // End the session in database
             session.LogoutTime = DateTime.Now;
             session.Status = "ForcedLogout";
             session.SessionDurationMinutes = (int)(session.LogoutTime.Value - session.LoginTime).TotalMinutes;
@@ -144,7 +165,40 @@ namespace EmployeeManagementSystem.Controllers
             _context.Update(session);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Session for {session.UserEmail} has been force-logged out.";
+            TempData["SuccessMessage"] = $"Session for {session.UserEmail} has been force-logged out. " +
+                $"They will be signed out on their next request.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Sessions/ForceLogoutAllUser
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForceLogoutAllUser(string userEmail)
+        {
+            var activeSessions = await _context.UserSessions
+                .Where(s => s.UserEmail == userEmail && s.Status == "Active")
+                .ToListAsync();
+
+            if (!activeSessions.Any())
+            {
+                TempData["ErrorMessage"] = $"No active sessions found for {userEmail}.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            foreach (var session in activeSessions)
+            {
+                session.LogoutTime = DateTime.Now;
+                session.Status = "ForcedLogout";
+                session.SessionDurationMinutes = (int)(session.LogoutTime.Value - session.LoginTime).TotalMinutes;
+                _context.Update(session);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"All {activeSessions.Count} active session(s) for {userEmail} have been force-logged out. " +
+                $"They will be signed out on their next request.";
+
             return RedirectToAction(nameof(Index));
         }
 

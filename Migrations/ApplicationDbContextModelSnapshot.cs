@@ -52,7 +52,7 @@ namespace EmployeeManagementSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("EmployeeManagementSystem.Models.Entities.Department", b =>
@@ -80,7 +80,7 @@ namespace EmployeeManagementSystem.Migrations
 
                     b.HasKey("DepartmentId");
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
 
                     b.HasData(
                         new
@@ -180,7 +180,7 @@ namespace EmployeeManagementSystem.Migrations
 
                     b.HasIndex("JobTitleId");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
 
                     b.HasData(
                         new
@@ -230,7 +230,7 @@ namespace EmployeeManagementSystem.Migrations
 
                     b.HasKey("JobTitleId");
 
-                    b.ToTable("JobTitles");
+                    b.ToTable("JobTitles", (string)null);
 
                     b.HasData(
                         new
@@ -345,7 +345,7 @@ namespace EmployeeManagementSystem.Migrations
 
                     b.HasKey("SessionId");
 
-                    b.ToTable("UserSessions");
+                    b.ToTable("UserSessions", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

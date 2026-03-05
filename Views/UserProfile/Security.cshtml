@@ -123,7 +123,7 @@
                         </div>
                     </div>
 
-                    @* Security Settings *@
+                    
                     @* Security Settings *@
                     <h5 class="border-bottom pb-2 mb-3">
                         <i class="bi bi-shield"></i> Security Settings
@@ -271,6 +271,23 @@
                             No login history yet. Login events will appear here after your next login attempt.
                         </div>
                     }
+
+                    @* Login History *@
+                    <h5 class="border-bottom pb-2 mb-3">
+                        <i class="bi bi-clock-history"></i> Login History
+                    </h5>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <p class="mb-3">
+                                Review your recent login sessions to detect any unauthorized access to your account.
+                            </p>
+                            <a asp-action="MySessions" class="btn btn-primary">
+                                <i class="bi bi-list-ul"></i> View My Login History
+                            </a>
+                        </div>
+                    </div>
+
 
                     @* Recent Activity *@
                     <h5 class="border-bottom pb-2 mb-3">

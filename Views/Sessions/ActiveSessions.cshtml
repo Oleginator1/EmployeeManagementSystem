@@ -1,0 +1,204 @@
+﻿@model List<EmployeeManagementSystem.Models.ViewModels.UserSessionViewModel>
+
+@{
+    ViewData["Title"] = "Active Sessions";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-circle-fill text-success"></i> Active Sessions
+            </h1>
+            <p class="text-muted">Currently logged-in users</p>
+        </div>
+        <div class="col text-end">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to All Sessions
+            </a>
+        </div>
+    </div>
+
+    @* Active Sessions Summary *@
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Active Users</h6>
+                            <h2 class="mb-0">@Model.Count</h2>
+                        </div>
+                        <i class="bi bi-people-fill fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Desktop Users</h6>
+                            <h2 class="mb-0">@Model.Count(s => s.DeviceType == "Desktop")</h2>
+                        </div>
+                        <i class="bi bi-laptop fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6>Mobile Users</h6>
+                            <h2 class="mb-0">@Model.Count(s => s.DeviceType == "Mobile" || s.DeviceType == "Tablet")</h2>
+                        </div>
+                        <i class="bi bi-phone fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Active Sessions Table *@
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-people"></i> Currently Logged In
+            </h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Login Time</th>
+                                <th>Duration</th>
+                                <th>Device</th>
+                                <th>Browser</th>
+                                <th>IP Address</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var session in Model.OrderByDescending(s => s.LoginTime))
+                            {
+                                <tr class="@(session.IsSuspicious ? "table-warning" : "")">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-success rounded-circle me-2"
+                                                 style="width: 10px; height: 10px;"
+                                                 title="Active">
+                                            </div>
+                                            <strong>@session.UserEmail</strong>
+                                            @if (session.IsSuspicious)
+                                            {
+                                                <i class="bi bi-exclamation-triangle text-warning ms-2"
+                                                   title="Suspicious activity detected"></i>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(session.UserRole switch
+                                              {
+                                                  "Admin" => "danger",
+                                                  "Manager" => "warning text-dark",
+                                                  _ => "info"
+                                              })">
+                                    @session.UserRole
+                                </span>
+                            </td>
+                            <td>
+                                <div>
+                                    <i class="bi bi-clock"></i>
+                                    @session.LoginTime.ToString("MMM dd, HH:mm")
+                                </div>
+                                <small class="text-muted">
+                                    @GetTimeAgo(session.LoginTime)
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@session.Duration</span>
+                            </td>
+                            <td>
+                                <i class="bi bi-@(session.DeviceType?.ToLower() switch
+                                   {
+                                       "mobile" => "phone",
+                                       "tablet" => "tablet",
+                                       _ => "laptop"
+                                   })"></i>
+                                @session.DeviceType
+                            </td>
+                            <td>
+                                <i class="bi bi-@(session.Browser?.ToLower() switch
+                                   {
+                                       "chrome" => "browser-chrome",
+                                       "firefox" => "browser-firefox",
+                                       "edge" => "browser-edge",
+                                       "safari" => "browser-safari",
+                                       _ => "globe"
+                                   })"></i>
+                                @session.Browser
+                            </td>
+                            <td>
+                                <code class="small">@session.IpAddress</code>
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="Details"
+                                   asp-route-id="@session.SessionId"
+                                   class="btn btn-sm btn-info"
+                                   title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form asp-action="ForceLogout"
+                                      asp-route-id="@session.SessionId"
+                                      method="post"
+                                      style="display:inline"
+                                      onsubmit="return confirm('Force logout @session.UserEmail?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger"
+                                            title="Force Logout">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                                                }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center py-5">
+                    <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                    <h5>No active sessions</h5>
+                    <p class="mb-0">There are currently no users logged in to the system.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetTimeAgo(DateTime loginTime)
+    {
+        var timeSpan = DateTime.Now - loginTime;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} min ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hr ago";
+
+        return $"{(int)timeSpan.TotalDays} days ago";
+    }
+}

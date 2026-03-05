@@ -242,28 +242,63 @@
                                         }
                                     </td>
                                     <td class="text-center">
-                                        <a asp-action="Details"
-                                           asp-route-id="@session.SessionId"
-                                           class="btn btn-sm btn-info"
-                                           title="View Details">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        @if (session.IsActive)
-                                        {
-                                            <form asp-action="ForceLogout"
-                                                  asp-route-id="@session.SessionId"
-                                                  method="post"
-                                                  style="display:inline"
-                                                  onsubmit="return confirm('Force logout this session?')">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-danger"
-                                                        title="Force Logout">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </form>
-                                        }
+                                        <div class="btn-group">
+                                            <a asp-action="Details"
+                                               asp-route-id="@session.SessionId"
+                                               class="btn btn-sm btn-info"
+                                               title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (session.IsActive)
+                                            {
+                                                <form asp-action="ForceLogout"
+                                                      asp-route-id="@session.SessionId"
+                                                      method="post"
+                                                      style="display:inline"
+                                                      onsubmit="return confirm('Force logout this session?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-danger"
+                                                            title="Force Logout This Session">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
                                     </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-success rounded-circle me-2"
+                                                 style="width: 10px; height: 10px;"
+                                                 title="Active">
+                                            </div>
+                                            <div>
+                                                <strong>@session.UserEmail</strong>
+                                                @if (session.IsSuspicious)
+                                                {
+                                                    <i class="bi bi-exclamation-triangle text-warning ms-2"
+                                                       title="Suspicious activity detected"></i>
+                                                }
+                                                <br />
+                                                @if (session.IsActive)
+                                                {
+                                                    <form asp-action="ForceLogoutAllUser"
+                                                          asp-route-userEmail="@session.UserEmail"
+                                                          method="post"
+                                                          style="display:inline"
+                                                          onsubmit="return confirm('Force logout ALL sessions for @session.UserEmail?')">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit"
+                                                                class="btn btn-xs btn-link text-danger p-0"
+                                                                title="Force Logout All Sessions">
+                                                            <small><i class="bi bi-x-circle-fill"></i> Logout all sessions</small>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+
                                 </tr>
                             }
                         </tbody>

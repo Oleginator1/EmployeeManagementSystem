@@ -309,6 +309,24 @@ namespace EmployeeManagementSystem.Controllers
             return View();
         }
 
+
+        // GET: UserProfile/MySessions
+        public async Task<IActionResult> MySessions()
+        {
+            var userId = _userService.GetCurrentUserId();
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var sessions = await _context.UserSessions
+                .AsNoTracking()
+                .Where(s => s.UserId == userId)
+                .OrderByDescending(s => s.LoginTime)
+                .Take(20)
+                .ToListAsync();
+
+            return View(sessions);
+        }
+
         // POST: UserProfile/LinkEmployee
         [HttpPost]
         [ValidateAntiForgeryToken]

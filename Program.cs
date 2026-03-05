@@ -62,6 +62,8 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+builder.Services.AddHostedService<EmployeeManagementSystem.BackgroundServices.SessionCleanupService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -82,6 +84,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
+
+app.UseMiddleware<EmployeeManagementSystem.Middleware.SessionValidationMiddleware>();
 
 app.MapRazorPages();
 

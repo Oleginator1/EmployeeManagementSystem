@@ -28,17 +28,36 @@ namespace EmployeeManagementSystem.Controllers
             
             var query = _context.AuditLogs.AsQueryable();
 
+
             
             if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
             {
                 var search = searchModel.SearchTerm.ToLower();
-                query = query.Where(a =>
-                    a.Action.ToLower().Contains(search) ||
-                    (a.Details != null && a.Details.ToLower().Contains(search))
-                );
+
+              
+                var textMatchIds = await query
+                    .Where(a =>
+                        a.Action.ToLower().Contains(search) ||
+                        (a.Details != null && a.Details.ToLower().Contains(search)) ||
+                        a.UserId.ToLower().Contains(search)
+                    )
+                    .Select(a => a.Id)
+                    .ToListAsync();
+
+                // Phonetic search on UserId
+                var phoneticMatchIds = await _context.AuditLogs
+                    .FromSqlRaw(@"
+            SELECT * FROM AuditLogs 
+            WHERE SOUNDEX(UserId) = SOUNDEX({0})",
+                        search)
+                    .Select(a => a.Id)
+                    .ToListAsync();
+
+                var matchingIds = textMatchIds.Union(phoneticMatchIds).Distinct().ToList();
+                query = query.Where(a => matchingIds.Contains(a.Id));
             }
 
-            
+
             if (!string.IsNullOrEmpty(searchModel.UserFilter))
             {
                 query = query.Where(a => a.UserId == searchModel.UserFilter);

@@ -2,7 +2,18 @@
 @model LoginModel
 
 @{
+
     ViewData["Title"] = "Log in";
+}
+
+
+@if (Request.Query.ContainsKey("forcedLogout"))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Session Ended</strong> - Your session was terminated by an administrator or expired due to inactivity. Please log in again.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 <h1>@ViewData["Title"]</h1>

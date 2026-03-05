@@ -37,17 +37,35 @@ namespace EmployeeManagementSystem.Controllers
                 .Include(d => d.Employees)
                 .AsQueryable();
 
-           
+
+
             if (!string.IsNullOrWhiteSpace(searchModel.SearchTerm))
             {
                 var search = searchModel.SearchTerm.ToLower();
-                query = query.Where(d =>
-                    d.Name.ToLower().Contains(search) ||
-                    (d.Description != null && d.Description.ToLower().Contains(search))
-                );
-            }
+
+              
+                var textMatchIds = await query
+                    .Where(d =>
+                        d.Name.ToLower().Contains(search) ||
+                        (d.Description != null && d.Description.ToLower().Contains(search))
+                    )
+                    .Select(d => d.DepartmentId)
+                    .ToListAsync();
 
             
+                var phoneticMatchIds = await _context.Departments
+                    .FromSqlRaw(@"
+                        SELECT * FROM Departments 
+                        WHERE SOUNDEX(Name) = SOUNDEX({0})",
+                        search)
+                    .Select(d => d.DepartmentId)
+                    .ToListAsync();
+
+                var matchingIds = textMatchIds.Union(phoneticMatchIds).Distinct().ToList();
+                query = query.Where(d => matchingIds.Contains(d.DepartmentId));
+            }
+
+
             searchModel.TotalRecords = await query.CountAsync();
 
        
